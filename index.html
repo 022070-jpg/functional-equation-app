@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>함수 방정식(Functional Equations) 탐구</title>
+    
+    <!-- 수식 렌더링을 위한 MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- 3D 및 2D 그래프 렌더링을 위한 Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1000px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; }
+        h1, h2, h3 { color: #2c3e50; }
+        .content-box { background: white; padding: 20px 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .interactive-panel { background: #e9ecef; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .control-group { display: flex; align-items: center; gap: 15px; }
+        select, input[type="range"] { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
+        #plot3d { width: 100%; height: 600px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .highlight { font-weight: bold; color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+    <h1>함수 방정식(Functional Equations) 입체 탐구</h1>
+    
+    <div class="content-box">
+        <h2>1. 함수 방정식이란?</h2>
+        <p>함수 방정식은 구해야 하는 미지수가 '실수'나 '복소수' 같은 값이 아니라 <strong>'함수 그 자체'</strong>인 방정식입니다. 함수의 대수적인 성질만을 기호로 정의하여 그 성질을 만족하는 함수 집합을 찾아내는 수학 분야입니다.</p>
+    </div>
+
+    <div class="content-box">
+        <h2>2. 주요 의의와 사회적 영향</h2>
+        <ul>
+            <li><strong>수학적 의의:</strong> 식의 형태가 아닌 '행동(성질)'을 기반으로 함수를 정의하므로, 대수학과 해석학을 통합적으로 이해하는 뼈대가 됩니다.</li>
+            <li><strong>정보통신(IT)의 탄생:</strong> 클로드 섀넌은 독립적인 두 정보의 결합성에 대한 함수 방정식을 세우고 풀어내어 <strong>정보 엔트로피 \( H = -\sum p \log p \)</strong> 공식을 유도했습니다. 이 방정식이 없었다면 오늘날의 디지털 데이터 압축과 통신은 존재하지 않았을 것입니다.</li>
+            <li><strong>경제학 및 AI:</strong> 시간의 흐름에 따른 최적의 결정을 내리는 <strong>벨만 방정식(Bellman Equation)</strong> 역시 함수 방정식입니다. 이는 현대 거시경제학 모델과 인공지능의 강화학습(Reinforcement Learning) 알고리즘의 핵심입니다.</li>
+        </ul>
+    </div>
+
+    <div class="content-box">
+        <h2>3. 대표적 예시 및 성질</h2>
+        <p><strong>연속성(Continuity)</strong>이라는 조건이 부여될 때, 대표적인 함수 방정식들은 다음과 같은 유일한 해를 가집니다.</p>
+        <ul>
+            <li><strong>코시의 가산 방정식:</strong> \( f(x+y) = f(x) + f(y) \) \(\implies f(x) = cx \)</li>
+            <li><strong>지수 방정식:</strong> \( f(x+y) = f(x)f(y) \) \(\implies f(x) = a^x \)</li>
+            <li><strong>달랑베르 방정식:</strong> \( f(x+y) + f(x-y) = 2f(x)f(y) \) \(\implies f(x) = \cos(cx) \) 또는 \( \cosh(cx) \)</li>
+        </ul>
+    </div>
+
+    <h2>4. 인터랙티브 3D 실험실</h2>
+    <p>아래 컨트롤러를 조작하여 함수 방정식의 종류와 상수를 변경해 보세요. 좌변과 우변이 동일하게 이루는 3차원 표면 \( z = f(x, y) \)를 입체적으로 확인할 수 있습니다.</p>
+    
+    <div class="interactive-panel">
+        <div class="control-group">
+            <label for="eqSelect"><strong>방정식 선택:</strong></label>
+            <select id="eqSelect">
+                <option value="cauchy">코시 방정식 ( f(x+y) = f(x)+f(y) ) → 해: f(x) = cx</option>
+                <option value="exponential">지수 방정식 ( f(x+y) = f(x)f(y) ) → 해: f(x) = a^x</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="paramSlider"><strong id="paramLabel">상수 c 값 조절: 1.0</strong></label>
+            <input type="range" id="paramSlider" min="-3" max="3" step="0.1" value="1">
+        </div>
+    </div>
+
+    <!-- 3D Plotly 그래프가 렌더링될 영역 -->
+    <div id="plot3d"></div>
+
+    <script>
+        // 변수 범위 생성 유틸리티 함수 (-5 부터 5까지)
+        const size = 30;
+        const x_vals = [];
+        const y_vals = [];
+        for(let i=0; i<size; i++) {
+            x_vals.push(-3 + (6 * i / (size - 1)));
+            y_vals.push(-3 + (6 * i / (size - 1)));
+        }
+
+        function updatePlot() {
+            const eqType = document.getElementById('eqSelect').value;
+            const param = parseFloat(document.getElementById('paramSlider').value);
+            
+            let z_vals = [];
+            let title = '';
+            
+            // UI 라벨 업데이트
+            if(eqType === 'cauchy') {
+                document.getElementById('paramLabel').innerText = `상수 c 값 조절 (기울기): ${param.toFixed(1)}`;
+                title = `z = f(x+y) = c(x+y) [c=${param.toFixed(1)}]`;
+            } else if (eqType === 'exponential') {
+                // 지수함수를 위해 param을 양수로 변환 (a = 2^param 정도의 스케일)
+                let a = Math.pow(1.5, param); 
+                document.getElementById('paramLabel').innerText = `상수 a 값 조절 (밑): ${a.toFixed(2)}`;
+                title = `z = f(x+y) = a^(x+y) [a=${a.toFixed(2)}]`;
+                
+                // 지수함수 시각화를 위해 z값이 너무 커지는 것 방지
+                for(let i=0; i<size; i++) {
+                    let z_row = [];
+                    for(let j=0; j<size; j++) {
+                        let val = Math.pow(a, x_vals[j] + y_vals[i]);
+                        // 그래프 한계 설정
+                        if(val > 50) val = 50; 
+                        z_row.push(val);
+                    }
+                    z_vals.push(z_row);
+                }
+            }
+
+            // 코시 방정식 z값 계산
+            if(eqType === 'cauchy') {
+                for(let i=0; i<size; i++) {
+                    let z_row = [];
+                    for(let j=0; j<size; j++) {
+                        z_row.push(param * (x_vals[j] + y_vals[i]));
+                    }
+                    z_vals.push(z_row);
+                }
+            }
+
+            const data = [{
+                z: z_vals,
+                x: x_vals,
+                y: y_vals,
+                type: 'surface',
+                colorscale: 'Viridis'
+            }];
+
+            const layout = {
+                title: title,
+                autosize: true,
+                scene: {
+                    xaxis: { title: 'x' },
+                    yaxis: { title: 'y' },
+                    zaxis: { title: 'z = f(x+y)' }
+                },
+                margin: { l: 0, r: 0, b: 0, t: 40 }
+            };
+
+            Plotly.react('plot3d', data, layout);
+        }
+
+        // 이벤트 리스너 등록
+        document.getElementById('eqSelect').addEventListener('change', updatePlot);
+        document.getElementById('paramSlider').addEventListener('input', updatePlot);
+
+        // 초기 그래프 렌더링
+        updatePlot();
+    </script>
+</body>
+</html>
